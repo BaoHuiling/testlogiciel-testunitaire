@@ -1,0 +1,1 @@
+Unittest会在assert函数出现错误的时候结束当前测试
