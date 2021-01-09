@@ -12,17 +12,30 @@ def get_rooms(db_path):
 
 	return rooms
 
+def verify_room_name(room_name):
+	# Extra requirement: room_name start with ROOM_ and length >=8
+	if room_name.startswith('ROOM_'):
+		if len(room_name) >= 8 :
+			return True
+	return False
+
+def verify_room_type(room_type):
+	# Extra requirement: room_type has to be public or private
+	if room_type == 'public' or room_type == 'private':
+		return True
+	return False
 
 def add_room(db_path, room_name, room_type):
 	connect = sqlite3.connect(db_path)
 	cursor = connect.cursor()
 
-	if room_type == 'public' or room_type == 'private':
+	if verify_room_type(room_type) and verify_room_name(room_name):
 
 		sql = 'INSERT INTO Rooms (room_name,room_type) VALUES (?,?)'
 		cursor.execute(sql,(room_name, room_type))
+
 	else:
-		print("\nRooms ERROR: room_type is ‘public’ or ‘private’\n")
+		print("\nRooms ERROR: \n room_type has to be 'public' or 'private'\nroom_name has to start with ROOM_ and length>=8\n")
 
 	connect.commit()
 
@@ -49,19 +62,32 @@ def get_users(db_path):
 
 	return users
 
+def verify_user_password(user_password):
+	# Extra requirement: check the password have number,special character, length>8 
+	is_number = 0
+	special_character = 0
 
-def add_user(db_path, user_name, user_role, user_rights, user_password):
-	connect = sqlite3.connect(db_path)
-	cursor = connect.cursor()
-	have_number = 0
-	have_special = 0
 	for i in user_password:
 		if i.isdigit():
-			have_number = 1
-		if (not i.isdigit()) and (not i.isupper())  and (not i.islower()):
-			have_special = 1
+			is_number = 1
 
-	if len(user_password)>8 and have_number ==1 and have_special ==1:
+		if (not i.islower()) and (not i.isupper())  and (not i.isdigit()):
+			special_character = 1
+
+	if len(user_password)>=8:
+		if is_number and special_character:
+			return True
+		
+	return False
+
+	
+def add_user(db_path, user_name, user_role, user_rights, user_password):
+
+	connect = sqlite3.connect(db_path)
+	cursor = connect.cursor()
+	
+	
+	if verify_user_password(user_password):
 		sql = 'INSERT INTO Users (user_name, user_role, user_rights, user_password) VALUES (?,?,?,?)'
 		cursor.execute(sql,(user_name, user_role, user_rights, user_password))
 
@@ -69,7 +95,7 @@ def add_user(db_path, user_name, user_role, user_rights, user_password):
 		print("\nUsers ERROR: password should > 8 chars, includes numbers and special character")
 	
 	connect.commit()
-		
+
 
 def delete_user(db_path, user_name):
 	connect = sqlite3.connect(db_path)
@@ -90,19 +116,14 @@ def create_db(db_path):
 
 	connect.commit()
 
-# # Db creation :
+# Db creation :
 # db_path = 'quick_chat.db'
 
 # create_db(db_path)
 
 # add_user('quick_chat.db','yann.c',0,0,'password')
-# add_user('quick_chat.db','huiling.b',0,0,'password')
 # add_room('quick_chat.db','room0','public')
-# add_room('quick_chat.db','room1','unknown')
 
 # print(get_users(db_path))
 # print(get_rooms(db_path))
 # delete_user(db_path,'yann.c')
-# print(get_users(db_path))
-# delete_room(db_path,'room1')
-# print(get_rooms(db_path))
